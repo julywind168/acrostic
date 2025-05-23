@@ -3,22 +3,20 @@ import acrostic/wire.{type WireType}
 import gleam/bit_array
 import gleam/int
 import gleam/list
-
-const mask64bit = 0xFFFFFFFFFFFFFFFF
+import gleam/order
 
 pub type BasicEncoder(value) =
   fn(value) -> BitArray
 
-// basic encode
 pub fn encode_varint(n: Int) -> BitArray {
-  case int.bitwise_and(n, mask64bit) {
-    x if x >= 0x80 -> {
+  case int.compare(n, 0x80) {
+    order.Gt -> {
       bit_array.append(
         <<{ n |> int.bitwise_and(0x7F) |> int.bitwise_or(0x80) }>>,
-        encode_varint(lsr(x, 7)),
+        encode_varint(lsr(n, 7)),
       )
     }
-    x -> <<int.bitwise_and(x, 0x7F)>>
+    _ -> <<int.bitwise_and(n, 0x7F)>>
   }
 }
 

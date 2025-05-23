@@ -41,11 +41,11 @@ fn reverted_to_variant(binary: BitArray, acc: Int, sum_len: Int) -> Int {
   }
 }
 
-fn decode_to_int(binary: BitArray) -> Result(Int, String) {
+pub fn decode_to_int(binary: BitArray) -> Result(Int, String) {
   Ok(to_varint(binary, 0))
 }
 
-fn decode_to_bool(binary: BitArray) -> Result(Bool, String) {
+pub fn decode_to_bool(binary: BitArray) -> Result(Bool, String) {
   case to_varint(binary, 0) {
     0 -> Ok(False)
     1 -> Ok(True)
@@ -54,7 +54,7 @@ fn decode_to_bool(binary: BitArray) -> Result(Bool, String) {
   }
 }
 
-fn decode_to_i32(binary: BitArray) -> Result(Float, String) {
+pub fn decode_to_i32(binary: BitArray) -> Result(Float, String) {
   case binary {
     <<f:float-little-size(32)>> -> Ok(f)
     _ ->
@@ -62,7 +62,7 @@ fn decode_to_i32(binary: BitArray) -> Result(Float, String) {
   }
 }
 
-fn decode_to_i64(binary: BitArray) -> Result(Float, String) {
+pub fn decode_to_i64(binary: BitArray) -> Result(Float, String) {
   case binary {
     <<f:float-little-size(64)>> -> Ok(f)
     _ ->
@@ -70,7 +70,7 @@ fn decode_to_i64(binary: BitArray) -> Result(Float, String) {
   }
 }
 
-fn decode_to_string(binary: BitArray) -> Result(String, String) {
+pub fn decode_to_string(binary: BitArray) -> Result(String, String) {
   case binary |> bit_array.to_string {
     Ok(s) -> Ok(s)
     Error(_) ->

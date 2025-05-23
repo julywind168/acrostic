@@ -20,6 +20,7 @@ pub type Flags {
   Flags(enum_to_int: Bool, int_to_enum: Bool)
 }
 
+@target(erlang)
 pub fn gen(protos: List(String), to out_path: String, flags flags: Flags) {
   protos
   |> list.map(fn(filepath) {
@@ -32,6 +33,11 @@ pub fn gen(protos: List(String), to out_path: String, flags flags: Flags) {
   |> generate_proto(out_path, flags)
 
   io.println("done")
+}
+
+@target(javascript)
+pub fn gen(_: List(String), to _: String, flags _: Flags) {
+  panic as "Code generation is not supported for javascript"
 }
 
 fn generate_proto(text: String, out_path: String, flags: Flags) {
@@ -101,9 +107,11 @@ fn write_messages(messages: List(Message), out_path: String) {
     simplifile.append(to: out_path, contents: "pub type Message {\n")
   let assert Ok(_) =
     messages
-    |> list.map(message_to_string(_, fn(field) {
-      field.name <> ": " <> to_gleam_ty(field.ty, field.repeated)
-    }))
+    |> list.map(
+      message_to_string(_, fn(field) {
+        field.name <> ": " <> to_gleam_ty(field.ty, field.repeated)
+      }),
+    )
     |> list.fold("", string.append)
     |> simplifile.append(to: out_path)
 
@@ -734,7 +742,7 @@ fn write_enum_to_int(enum: parser.PbEnum, out_path: String) {
 }
 
 fn get_enums(text: String, lexer, parser) {
-  let assert Ok(re) = regexp.from_string("enum\\s+\\w+\\s*{[^{}]*}")
+  let assert Ok(re) = regexp.from_string("enum\\s+\\w+\\s*\\{[^{}]*\\}")
   regexp.scan(re, text)
   |> list.map(fn(a) {
     let assert Ok(tokens) = lexer.run(a.content, lexer)
@@ -746,7 +754,7 @@ fn get_enums(text: String, lexer, parser) {
 fn get_structs(text: String, lexer, parser) {
   let assert Ok(re) =
     regexp.from_string(
-      "//\\s*@gleam\\s+record\\s*\nmessage\\s+\\w+\\s*{([^{}]*)}",
+      "//\\s*@gleam\\s+record\\s*\nmessage\\s+\\w+\\s*\\{([^{}]*)\\}",
     )
   regexp.scan(re, text)
   |> list.map(fn(a) {
@@ -759,7 +767,7 @@ fn get_structs(text: String, lexer, parser) {
 fn get_messages(text: String, lexer, parser) {
   let assert Ok(re) =
     regexp.from_string(
-      "//\\s*@gleam\\s+msgid\\s*=\\s*(\\d+)\\s*\nmessage\\s+\\w+\\s*{([^{}]*)}",
+      "//\\s*@gleam\\s+msgid\\s*=\\s*(\\d+)\\s*\nmessage\\s+\\w+\\s*\\{([^{}]*)\\}",
     )
   regexp.scan(re, text)
   |> list.map(fn(a) {
